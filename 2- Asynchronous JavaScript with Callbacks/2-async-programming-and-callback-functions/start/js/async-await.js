@@ -4,14 +4,21 @@ const peopleList = document.getElementById('people');
 const btn = document.querySelector('button');
 
 // Handle all fetch requests
+async function getJSON(url) {
+  try{
+    const resp = await fetch(url)
+    return await resp.json();
+  }catch(error){
+    throw error;
+  }
+}
+
 async function getPeopleInSpace(url) {
-  const peopleResp = await fetch(url);
-  const peopleJSON = await peopleResp.json();
+  const peopleJSON = await getJSON(url);
 
   const profiles = peopleJSON.people.map(async (person) => {
     const craft = person.craft;
-    const profileResp = await fetch(wikiUrl + person.name);
-    const profileJSON = await profileResp.json();
+    const profileJSON = await getJSON(wikiUrl + person.name);
 
     return {...profileJSON, craft}
   });
@@ -34,10 +41,14 @@ function generateHTML(data) {
   });
 }
 
-btn.addEventListener('click', async (event) => {
+btn.addEventListener('click', (event) => {
   event.target.textContent = "Loading...";
 
-  const astros = await getPeopleInSpace(astrosUrl);
-  generateHTML(astros);
-  event.target.remove()
+  getPeopleInSpace(astrosUrl)
+    .then(generateHTML)
+    .catch(err => {
+      peopleList.innerHTML = '<h3>Something went wrong!</h3>';
+      console.error(err)
+    })
+    .finally(() => event.target.remove())
 });
