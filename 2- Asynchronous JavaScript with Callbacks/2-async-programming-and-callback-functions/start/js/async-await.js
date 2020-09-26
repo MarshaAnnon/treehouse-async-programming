@@ -4,7 +4,20 @@ const peopleList = document.getElementById('people');
 const btn = document.querySelector('button');
 
 // Handle all fetch requests
+async function getPeopleInSpace(url) {
+  const peopleResp = await fetch(url);
+  const peopleJSON = await peopleResp.json();
 
+  const profiles = peopleJSON.people.map(async (person) => {
+    const craft = person.craft;
+    const profileResp = await fetch(wikiUrl + person.name);
+    const profileJSON = await profileResp.json();
+
+    return {...profileJSON, craft}
+  });
+
+  return Promise.all(profiles);
+}
 
 // Generate the markup for each profile
 function generateHTML(data) {
@@ -21,7 +34,10 @@ function generateHTML(data) {
   });
 }
 
-btn.addEventListener('click', (event) => {
+btn.addEventListener('click', async (event) => {
   event.target.textContent = "Loading...";
 
+  const astros = await getPeopleInSpace(astrosUrl);
+  generateHTML(astros);
+  event.target.remove()
 });
